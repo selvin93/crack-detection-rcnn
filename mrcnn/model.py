@@ -22,7 +22,7 @@ import tensorflow.keras.utils as KU
 from tensorflow.python.eager import context
 import tensorflow.keras.models as KM
 
-from mrcnn import utils
+from ..mrcnn import utils
 
 # Requires TensorFlow 2.0+
 from distutils.version import LooseVersion
@@ -2362,9 +2362,9 @@ class MaskRCNN(object):
             callbacks=callbacks,
             validation_data=val_generator,
             validation_steps=self.config.VALIDATION_STEPS,
-            max_queue_size=100,
-            workers=workers,
-            use_multiprocessing=workers > 1,
+            max_queue_size=100
+#             workers=workers,
+#             use_multiprocessing=workers > 1,
         )
         self.epoch = max(self.epoch, epochs)
 
