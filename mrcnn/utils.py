@@ -9,6 +9,7 @@ Written by Waleed Abdulla
 
 import sys
 import os
+import logging
 import math
 import random
 import numpy as np
@@ -198,8 +199,8 @@ def box_refinement_graph(box, gt_box):
 
     dy = (gt_center_y - center_y) / height
     dx = (gt_center_x - center_x) / width
-    dh = tf.log(gt_height / height)
-    dw = tf.log(gt_width / width)
+    dh = tf.math.log(gt_height / height)
+    dw = tf.math.log(gt_width / width)
 
     result = tf.stack([dy, dx, dh, dw], axis=1)
     return result
@@ -730,7 +731,6 @@ def compute_ap(gt_boxes, gt_class_ids, gt_masks,
 
     # Compute precision and recall at each prediction box step
     precisions = np.cumsum(pred_match > -1) / (np.arange(len(pred_match)) + 1)
-    #precisons_1 = precisions
     recalls = np.cumsum(pred_match > -1).astype(np.float32) / len(gt_match)
 
     # Pad with start and end values to simplify the math
@@ -788,61 +788,9 @@ def compute_recall(pred_boxes, gt_boxes, iou):
     iou_argmax = np.argmax(overlaps, axis=1)
     positive_ids = np.where(iou_max >= iou)[0]
     matched_gt_boxes = iou_argmax[positive_ids]
-    #print(gt_boxes.shape[0])
-    #print(gt_boxes)
+
     recall = len(set(matched_gt_boxes)) / gt_boxes.shape[0]
     return recall, positive_ids
-
-
-def compute_Precision(pred_boxes, gt_boxes, iou):
-    """Compute the recall at the given IoU threshold. It's an indication
-    of how many GT boxes were found by the given prediction boxes.
-
-    pred_boxes: [N, (y1, x1, y2, x2)] in image coordinates
-    gt_boxes: [N, (y1, x1, y2, x2)] in image coordinates
-    """
-    # Measure overlaps
-    overlaps = compute_overlaps(pred_boxes, gt_boxes)
-    iou_max = np.max(overlaps, axis=1)
-    iou_argmax = np.argmax(overlaps, axis=1)
-    positive_ids = np.where(iou_max >= iou)[0]
-    negative_ids = np.where(iou_max < iou)[0]
-    matched_gt_boxes = iou_argmax[positive_ids]
-    unmatched_gt_boxes = iou_argmax[negative_ids]
-    #print("iouargmax", iou_argmax)
-    #print("matchedgtbox",matched_gt_boxes)
-    #print(len(set(matched_gt_boxes)))
-    precision = len(set(matched_gt_boxes)) / (iou_argmax.shape[0])
-    #precision = len(set(matched_gt_boxes)) / (gt_boxes.shape[0]-
-    return precision, positive_ids, negative_ids
-
-
-def compute_specificity(pred_boxes, gt_boxes, iou):
-    """Compute the recall at the given IoU threshold. It's an indication
-    of how many GT boxes were found by the given prediction boxes.
-
-    pred_boxes: [N, (y1, x1, y2, x2)] in image coordinates
-    gt_boxes: [N, (y1, x1, y2, x2)] in image coordinates
-    """
-    # Measure overlaps
-    overlaps = compute_overlaps(pred_boxes, gt_boxes)
-    iou_max = np.max(overlaps, axis=1)
-    iou_argmax = np.argmax(overlaps, axis=1)
-    positive_ids = np.where(iou_max >= iou)[0]
-    negative_ids = np.where(iou_max < iou)[0]
-    matched_gt_boxes = iou_argmax[positive_ids]
-    unmatched_gt_boxes = iou_argmax[negative_ids]
-    #print("iouargmax", iou_argmax)
-    #print("matchedgtbox",matched_gt_boxes)
-    #print(len(set(matched_gt_boxes)))
-    FN = (gt_boxes.shape[0]-len(set(matched_gt_boxes)))
-    FP = (iou_argmax.shape[0]-len(set(matched_gt_boxes)))
-    TP = len(set(matched_gt_boxes))
-    TN = len(set(unmatched_gt_boxes))
-    Accuracy = (TP+TN) /(TP+TN+FP+FN)
-    #specificity = TN/(TN+FP)
-    #precision = len(set(matched_gt_boxes)) / (gt_boxes.shape[0]-
-    return Accuracy
 
 
 # ## Batch Slicing

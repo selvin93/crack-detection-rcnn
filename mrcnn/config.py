@@ -40,12 +40,12 @@ class Config(object):
     # Validation stats are also calculated at each epoch end and they
     # might take a while, so don't set this too small to avoid spending
     # a lot of time on validation stats.
-    STEPS_PER_EPOCH = 500
+    STEPS_PER_EPOCH = 1000
 
     # Number of validation steps to run at the end of every training epoch.
     # A bigger number improves accuracy of validation stats, but slows
     # down the training.
-    VALIDATION_STEPS = 100
+    VALIDATION_STEPS = 50
 
     # Backbone network architecture
     # Supported values are: resnet50, resnet101.
@@ -70,7 +70,7 @@ class Config(object):
     TOP_DOWN_PYRAMID_SIZE = 256
 
     # Number of classification classes (including background)
-    NUM_CLASSES = 1 + 1  # Override in sub-classes
+    NUM_CLASSES = 1  # Override in sub-classes
 
     # Length of square anchor side in pixels
     RPN_ANCHOR_SCALES = (32, 64, 128, 256, 512)
@@ -101,7 +101,7 @@ class Config(object):
     # If enabled, resizes instance masks to a smaller size to reduce
     # memory load. Recommended when using high-resolution images.
     USE_MINI_MASK = True
-    MINI_MASK_SHAPE = (28, 28)  # (height, width) of the mini-mask (56,56)
+    MINI_MASK_SHAPE = (56, 56)  # (height, width) of the mini-mask
 
     # Input image resizing
     # Generally, use the "square" resizing mode for training and predicting
@@ -124,8 +124,8 @@ class Config(object):
     #         size IMAGE_MIN_DIM x IMAGE_MIN_DIM. Can be used in training only.
     #         IMAGE_MAX_DIM is not used in this mode.
     IMAGE_RESIZE_MODE = "square"
-    IMAGE_MIN_DIM = 512
-    IMAGE_MAX_DIM = 512
+    IMAGE_MIN_DIM = 800
+    IMAGE_MAX_DIM = 1024
     # Minimum scaling ratio. Checked after MIN_IMAGE_DIM and can force further
     # up scaling. For example, if set to 2 then images are scaled up to double
     # the width and height, or more, even if MIN_IMAGE_DIM doesn't require it.
@@ -169,7 +169,7 @@ class Config(object):
 
     # Minimum probability value to accept a detected instance
     # ROIs below this threshold are skipped
-    DETECTION_MIN_CONFIDENCE = 0.9
+    DETECTION_MIN_CONFIDENCE = 0.7
 
     # Non-maximum suppression threshold for detection
     DETECTION_NMS_THRESHOLD = 0.3
@@ -227,10 +227,17 @@ class Config(object):
         # See compose_image_meta() for details
         self.IMAGE_META_SIZE = 1 + 3 + 3 + 4 + 1 + self.NUM_CLASSES
 
+    def to_dict(self):
+        return {a: getattr(self, a)
+                for a in sorted(dir(self))
+                if not a.startswith("__") and not callable(getattr(self, a))}
+
     def display(self):
         """Display Configuration values."""
         print("\nConfigurations:")
-        for a in dir(self):
-            if not a.startswith("__") and not callable(getattr(self, a)):
-                print("{:30} {}".format(a, getattr(self, a)))
+        for key, val in self.to_dict().items():
+            print(f"{key:30} {val}")
+        # for a in dir(self):
+        #     if not a.startswith("__") and not callable(getattr(self, a)):
+        #         print("{:30} {}".format(a, getattr(self, a)))
         print("\n")
